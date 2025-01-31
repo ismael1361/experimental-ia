@@ -1,3 +1,5 @@
+import { randFunction } from "./Utils";
+
 const csrMatrixDeterminant = (matrix: Matrix): number => {
     const n = matrix.ROW_INDEX.length - 1;
     if (n === 0) return 1;
@@ -103,6 +105,35 @@ export class Matrix {
         return new Matrix(rows, cols);
     }
 
+    static random(rows: number, cols: number, fn?: () => number): Matrix {
+        const ROW_INDEX = [0];
+        const COL_INDEX = [];
+        const V = [];
+
+        let row_end = 0;
+
+        fn = typeof fn === "function" ? fn : randFunction(0, 1, "float32");
+
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const value = fn();
+                if (value !== 0) {
+                    V.push(value);
+                    COL_INDEX.push(col);
+                    row_end += 1;
+                }
+            }
+            ROW_INDEX.push(row_end);
+        }
+
+        const m = new Matrix(rows, cols);
+        m.V = V;
+        m.COL_INDEX = COL_INDEX;
+        m.ROW_INDEX = ROW_INDEX;
+
+        return m;
+    }
+
     /**
      * Obtem os dados da matriz.
      * @returns Dados da matriz.
@@ -133,6 +164,38 @@ export class Matrix {
             }
         }
         return arr;
+    }
+
+    /**
+     * Obtem a representação JSON da matriz.
+     * @returns Representação JSON da matriz.
+     * @example
+     * const m = new Matrix(2, 2, [[1, 2], [3, 4]]);
+     * m.toJSON(); // { ROWS: 2, COLS: 2, ROW_INDEX: [0, 2, 4], COL_INDEX: [0, 1, 0, 1], V: [1, 2, 3, 4] }
+     */
+    toJSON() {
+        return {
+            ROWS: this.rows,
+            COLS: this.cols,
+            ROW_INDEX: this.ROW_INDEX,
+            COL_INDEX: this.COL_INDEX,
+            V: this.V,
+        };
+    }
+
+    /**
+     * Transforma um objeto JSON em uma matriz.
+     * @param json Objeto JSON.
+     * @returns Matriz.
+     * @example
+     * Matrix.fromJSON({ ROWS: 2, COLS: 2, ROW_INDEX: [0, 2, 4], COL_INDEX: [0, 1, 0, 1], V: [1, 2, 3, 4] });
+     */
+    static fromJSON(json: { ROWS: number; COLS: number; ROW_INDEX: number[]; COL_INDEX: number[]; V: number[] }): Matrix {
+        const m = new Matrix(json.ROWS, json.COLS);
+        m.ROW_INDEX = json.ROW_INDEX;
+        m.COL_INDEX = json.COL_INDEX;
+        m.V = json.V;
+        return m;
     }
 
     /**
